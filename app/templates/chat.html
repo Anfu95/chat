@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat room</title>
+</head>
+<body>
+  <h1>Bienvenidos al chat grupal</h1>
+  <div id="mensajes"></div>
+  <form action="" id ="message-input-form">
+    <input id="message-input" type="text" placeholder="Ingresa tu mensaje">
+    <button type="submit">Enviar mensaje</button>
+  </form>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+  <script>
+    const socket = io.connect("http://127.0.0.1:5000");
+
+    socket.on('connect', function() {
+      socket.emit('join_room', {
+        username: "{{username}}",
+        room: "{{room}}"
+      })
+
+      let messageInput  = document.getElementById('message-input');
+
+      document.getElementById('message-input-form').onsubmit = function (e) {
+        e.preventDefault();
+        let message = messageInput.value.trim();
+        if (message.length) {
+          socket.emit('send_message', {
+            username: "{{username}}",
+            room: "{{room}}",
+            message: message
+          })
+        }
+        messageInput.value = '';
+        messageInput.focus();
+      }
+    })
+
+    socket.on('join_room_announcement', function(data) {
+      console.log(data);
+      const newNode = document.createElement('div');
+      newNode.innerHTML = `<b>${data.username}</b> se ha unido a la sala`;
+      document.getElementById("mensajes").appendChild(newNode);
+    })
+
+    socket.on('receive_message', function(data){
+      console.log(data);
+      const newNode = document.createElement('div');
+      newNode.innerHTML = `<b>${data.username}:&nbsp;</b> ${data.message}`;
+      document.getElementById("mensajes").appendChild(newNode);
+    })
+  </script>
+</body>
+</html>
